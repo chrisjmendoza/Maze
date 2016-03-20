@@ -175,19 +175,121 @@ public class DrawMaze extends JPanel {
      */
     public static void main(String[] args) {
         DrawMaze myMaze = new DrawMaze(5, 4);
-//        for(int i = 0; i < myMaze.width; i++) {
-//            for (int j = 0; j < myMaze.height; j++) {
-//                myMaze.addHorizontalWall(i, j, 1);
-//                myMaze.addVerticalWall(i, j, 1);
-//            }
-//        }
-        myMaze.addHorizontalWall(2, 1, 2);
-        myMaze.addVerticalWall(3, 1, 2);
-        myMaze.addVerticalWall(4, 1, 3);
-        myMaze.addHorizontalWall(0, 2, 2);
-        myMaze.addVerticalWall(1, 0);
-        myMaze.addHorizontalWall(1, 3, 2);
+
+        //myMaze.addHorizontalWall(2, 1, 2);
+        //myMaze.addVerticalWall(3, 1, 2);
+        //myMaze.addVerticalWall(4, 1, 3);
+        //myMaze.addHorizontalWall(0, 2, 2);
+        //myMaze.addVerticalWall(1, 0);
+        //myMaze.addHorizontalWall(1, 3, 2);
+        myMaze.maze1();
         myMaze.display();
+    }
+
+    /**
+     * Creates a maze based on minus requirements
+     */
+    public void maze1() {
+
+        ArrayList<Point> source = new ArrayList<>();
+        ArrayList<Point> loose = new ArrayList<>();
+
+        // Run a loop to fill the array with source points
+        int counterY = 0;
+        while (counterY <= height) {
+            // Add the points that make up the upper and lower walls
+            if (counterY == 0 || counterY == height) {
+                for (int i = 0; i <= width; i++) {
+                    source.add(new Point(i, counterY));
+                }
+            } else { // Fills in the points along the edges
+                source.add(new Point(0, counterY));
+                source.add(new Point(width, counterY));
+            }
+            counterY++;
+        }
+        // Run a loop to fill the loose array with the remaining points
+        counterY = 1;
+        while (counterY < height) {
+            for(int x = 1; x < width; x++) {
+                loose.add(new Point(x, counterY));
+            }
+            counterY++;
+        }
+
+//        System.out.println("The Source array points");
+//        printArray(source);
+//        System.out.println("The Loose array points");
+//        printArray(loose);
+
+        // ------> START MAZE GENERATION <------- //
+
+        // Pick a random SOURCE Point
+        Random rand = new Random();
+        Point random = source.get(rand.nextInt(source.size()));
+
+        // Loop through the maze and add walls until the loose points are all gone
+        while(loose.size() > 0) {
+            // Check for adjacent points that are not connected on the left side
+            if (random.getX() == 0 && random.getY() != 0 && random.getY() != height) {
+                Point check = new Point((int) (random.getX() + 1), (int) random.getY());
+                // If the loose points array contains the same point, add the wall
+                // and remove the point from the loose array
+                if (loose.contains(check)) {
+                    this.addHorizontalWall((int) random.getX(), (int) random.getY(), 1);
+                    loose.remove(check); // Remove the loose point as it is now connected
+                    source.remove(random); // Remove the source point as it no longer has ability to connect
+                }
+                // Check for adjacent points that are not connected on the right side
+            } else if (random.getX() == width && random.getY() != 0 && random.getY() != height) {
+                Point check = new Point((int) (random.getX() - 1), (int) random.getY());
+                // If the loose points array contains the same point, add the wall
+                // and remove the point from the loose array
+                if (loose.contains(check)) {
+                    this.addHorizontalWall((int) random.getX(), (int) random.getY(), 1);
+                    loose.remove(check); // Remove the loose point as it is now connected
+                    source.remove(random); // Remove the source point as it no longer has ability to connect
+                }
+                // Check for vertical points from the top
+            } else if (random.getX() != 0 && random.getX() != width && random.getY() == 0) {
+                Point check = new Point((int) (random.getX()), (int) random.getY() + 1);
+                // If the loose points array contains the same point, add the wall
+                // and remove the point from the loose array
+                if (loose.contains(check)) {
+                    this.addVerticalWall((int) random.getX(), (int) random.getY(), 1);
+                    loose.remove(check); // Remove the loose point as it is now connected
+                    source.remove(random); // Remove the source point as it no longer has ability to connect
+                }
+                // Check for vertical walls from the bottom
+            } else if (random.getX() != 0 && random.getX() != width && random.getY() == height) {
+                Point check = new Point((int) (random.getX()), (int) random.getY() - 1);
+                // If the loose points array contains the same point, add the wall
+                // and remove the point from the loose array
+                if (loose.contains(check)) {
+                    this.addVerticalWall((int) random.getX(), (int) random.getY(), 1);
+                    loose.remove(check); // Remove the loose point as it is now connected
+                    source.remove(random); // Remove the source point as it no longer has ability to connect
+                }
+            } else {
+
+            }
+        }
+    }
+
+
+    /**
+     * A method to print the values of the point arrays for testing
+     * @param a The ArrayList of points to print
+     */
+    public void printArray(ArrayList<Point> a) {
+
+        for(Point p : a) {
+            String space;
+            String spaceY;
+            if(p.getX() < 10) { space = " "; } else space = "";
+            if(p.getY() < 10) { spaceY = " "; } else spaceY = "";
+            System.out.println(space + p.getX() + " : " + spaceY + p.getY());
+        }
     }
 
 }
