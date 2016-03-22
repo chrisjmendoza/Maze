@@ -2,6 +2,7 @@ package ad325.graphs;
 
 import java.awt.*;
 import javax.swing.*;
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -183,7 +184,8 @@ public class DrawMaze extends JPanel {
      * @param args The command-line arguments
      */
     public static void main(String[] args) {
-        DrawMaze myMaze = new DrawMaze(100, 28);
+        DrawMaze myMaze = new DrawMaze(20, 20);
+        DrawMaze myMaze1 = new DrawMaze(100, 25);
 
         //myMaze.addHorizontalWall(2, 1, 2);
         //myMaze.addVerticalWall(3, 1, 2);
@@ -192,7 +194,7 @@ public class DrawMaze extends JPanel {
         //myMaze.addVerticalWall(1, 0);
         //myMaze.addHorizontalWall(1, 3, 2);
         myMaze.maze1();
-        myMaze.display();
+        myMaze1.maze2();
     }
 
     /**
@@ -234,25 +236,29 @@ public class DrawMaze extends JPanel {
 
         // --------------------------------> START MAZE GENERATION <------------------------- //
 
-        // Pick a sourcePoint SOURCE Point
-
-
         // Loop through the maze and add walls until the loose points are all gone
         while (loose.size() > 0) {
             Random rand = new Random();
+            // Pick a random source point to draw a wall from
             Point sourcePoint = source.get(rand.nextInt(source.size()));
 
+            // Create 4 "check" points to compare to the current source point
             Point checkUp = new Point((int) (sourcePoint.getX()), (int) sourcePoint.getY() - 1);
             Point checkDown = new Point((int) (sourcePoint.getX()), (int) sourcePoint.getY() + 1);
             Point checkLeft = new Point((int) (sourcePoint.getX() - 1), (int) sourcePoint.getY());
             Point checkRight = new Point((int) (sourcePoint.getX() + 1), (int) sourcePoint.getY());
 
+            // Argument to determine whether to remove the source point
             boolean removePoint = false;
 
+            // The chosen direction to travel, defaults to 0
             int direction = 0;
 
+            // Stores the available directions/adjacent points available to the source point
             ArrayList<Integer> availableDirection = new ArrayList<>();
 
+            // For every point in the loose array, if the checked point matches a value
+            // in the array, add that direction to the direction array
             for (Point p : loose) {
                 if (p.equals(checkUp)) {
                     availableDirection.add(1);
@@ -264,40 +270,230 @@ public class DrawMaze extends JPanel {
                     availableDirection.add(4);
                 }
             }
+
             // If there is no adjacent loose point, remove the point from the source list
             if (availableDirection.size() == 0) {
                 removePoint = true;
+                // If there is only 1 direction to travel, add a wall in that direction
+                // and remove the source point from the source array
             } else if (availableDirection.size() == 1) {
                 removePoint = true;
                 direction = availableDirection.get(0);
+                // If there is more than 1 adjacent point, randomly pick a direction
             } else {
                 direction = availableDirection.get((int) (Math.random() * availableDirection.size()));
             }
+
             // Based on the chosen direction, draw a wall
+            // DRAW UP
             if (direction == 1) {
                 this.addVerticalWall((int) sourcePoint.getX(), (int) sourcePoint.getY() - 1, 1);
                 loose.remove(checkUp);
                 source.add(checkUp);
+                // DRAW DOWN
             } else if (direction == 2) {
                 this.addVerticalWall((int) sourcePoint.getX(), (int) sourcePoint.getY(), 1);
                 loose.remove(checkDown);
                 source.add(checkDown);
+                // DRAW LEFT
             } else if (direction == 3) {
                 this.addHorizontalWall((int) sourcePoint.getX() - 1, (int) sourcePoint.getY(), 1);
                 loose.remove(checkLeft);
                 source.add(checkLeft);
+                //DRAW RIGHT
             } else if (direction == 4) {
                 this.addHorizontalWall((int) sourcePoint.getX(), (int) sourcePoint.getY(), 1);
                 loose.remove(checkRight);
                 source.add(checkRight);
             }
+
             // If the source point has 0 or 1 adjacent points, remove it from the array
             if (removePoint) {
                 source.remove(sourcePoint);
             }
         }
+        // Whew, a lot of work. Nice job! Let's display this bad boy! :D
+        display();
     }
 
+    public void maze2() {
+        // instance variables
+        ArrayList<Cell> grid = new ArrayList<>();
+
+        // generate a wall filled maze
+        for(int i = 0; i < width; i++) {
+            for(int j = 0; j < height; j++) {
+                if(!(i == 0)) {
+                    addHorizontalWall(i, j);
+                }
+
+                addVerticalWall(i,j);
+                grid.add(new Cell(i, j));
+            }
+        }
+
+        // Remove the wall on the opening
+        //walls.remove(new Wall(0,0, true));
+
+        // Create the stack and temporary cell
+        Stack<Cell> stack = new Stack<>();
+        Cell current = grid.get(grid.size() - 1);
+
+        // In each cell, give their ArrayList values for which directions are available
+        grid.forEach(Cell::directions);
+
+        // Start the recursive? loop
+        do {
+            int direction = 0;
+
+            // If the current cell has moves available, gets the moves available
+            // and randomly chooses a direction
+            if(current.hasAvailableMoves()) {
+                Random rand = new Random();
+                ArrayList<Integer> availableMoves = current.getAvailableDirections();
+                direction = availableMoves.get(rand.nextInt(availableMoves.size()));
+
+                if(direction == 1) {
+                    int gridX = current.getX();
+                    int gridY = current.getY() - 1;
+                    Cell check = null;
+                    for(Cell c : grid) {
+                        if(gridX == c.getX() && gridY == c.getY()) {
+                            check = c;
+                            break;
+                        }
+                    }
+                    if(!(check.isVisited())) {
+                        current.setVisited(true);
+                        current.availableDirections.remove(current.availableDirections.indexOf(1));
+                        stack.add(current);
+                        walls.remove(new Wall(current.getX(), current.getY(), true));
+                        current = check;
+                    } else {
+                        current.availableDirections.remove(current.availableDirections.indexOf(1));
+                    }
+                } else if(direction == 2) {
+                    int gridX = current.getX();
+                    int gridY = current.getY() + 1;
+                    Cell check = null;
+                    for(Cell c : grid) {
+                        if(gridX == c.getX() && gridY == c.getY() ) {
+                            check = c;
+                            break;
+                        }
+                    }
+                    if(!(check.isVisited())) {
+                        current.setVisited(true);
+                        current.availableDirections.remove(current.availableDirections.indexOf(2));
+                        stack.add(current);
+                        walls.remove(new Wall(current.getX(), current.getY() + 1, true));
+                        current = check;
+                    } else {
+                        current.availableDirections.remove(current.availableDirections.indexOf(2));
+                    }
+                } else if(direction == 3) {
+                    int gridX = current.getX() - 1;
+                    int gridY = current.getY();
+                    Cell check = null;
+                    for(Cell c : grid) {
+                        if(gridX == c.getX() && gridY == c.getY()) {
+                            check = c;
+                            break;
+                        }
+                    }
+                    if(!(check.isVisited())) {
+                        current.setVisited(true);
+                        current.availableDirections.remove(current.availableDirections.indexOf(3));
+                        stack.add(current);
+                        walls.remove(new Wall(current.getX(), current.getY(), false));
+                        current = check;
+                    } else {
+                        current.availableDirections.remove(current.availableDirections.indexOf(3));
+                    }
+                } else if(direction == 4) {
+                    int gridX = current.getX() + 1;
+                    int gridY = current.getY();
+                    Cell check = null;
+                    for(Cell c : grid) {
+                        if(gridX == c.getX() && gridY == c.getY()) {
+                            check = c;
+                            break;
+                        }
+                    }
+                    if(!(check.isVisited())) {
+                        current.setVisited(true);
+                        current.availableDirections.remove(current.availableDirections.indexOf(4));
+                        stack.add(current);
+                        walls.remove(new Wall(current.getX() + 1, current.getY(), false));
+                        current = check;
+                    } else {
+                        current.availableDirections.remove(current.availableDirections.indexOf(4));
+                    }
+                }
+
+            } else {
+                current = stack.pop();
+            }
+        } while(!stack.isEmpty());
+
+        display();
+    }
+
+    class Cell {
+
+        boolean visited;
+        int x;
+        int y;
+        ArrayList<Integer> availableDirections = new ArrayList<>();
+
+        public Cell(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        public boolean isVisited() {
+            return visited;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public void setVisited(boolean visited) {
+            this.visited = visited;
+        }
+
+        public boolean hasAvailableMoves() {
+            return availableDirections.size() > 0;
+        }
+
+        public void directions() {
+            // Check upward movement
+            if(y - 1 >= 0) {
+                availableDirections.add(1);
+            }
+            // Check downward movement
+            if(y + 1 < height) {
+                availableDirections.add(2);
+            }
+            // Check left side
+            if(x - 1 >= 0) {
+                availableDirections.add(3);
+            }
+            // Check right side
+            if(x + 1 < width) {
+                availableDirections.add(4);
+            }
+        }
+
+        public ArrayList<Integer> getAvailableDirections() {
+            return availableDirections;
+        }
+    }
 
     /**
      * A method to print the values of the point arrays for testing
