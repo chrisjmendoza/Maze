@@ -2,13 +2,12 @@ package ad325.graphs;
 
 import java.awt.*;
 import javax.swing.*;
-import java.lang.reflect.Array;
 import java.util.*;
 
 /**
  * A simple class to support drawing the maze.
  *
- * @author Dan
+ * @author Dan Jinguji, made even more awesome by Chris Mendoza
  */
 public class DrawMaze extends JPanel {
 
@@ -23,15 +22,15 @@ public class DrawMaze extends JPanel {
     /**
      * The width of the maze halls, a constant
      */
-    public static final int SIZE = 35;
+    public static final int SIZE = 15;
     /**
      * The thickness of the maze walls, a constant
      */
-    public static final int WALL = 5;
+    public static final int WALL = 2;
     /**
      * The thickness of the border around the maze, a constant
      */
-    public static final int BORDER = 10;
+    public static final int BORDER = 5;
 
     // storage for the walls that are added
     private Set<Wall> walls;
@@ -184,15 +183,9 @@ public class DrawMaze extends JPanel {
      * @param args The command-line arguments
      */
     public static void main(String[] args) {
-        DrawMaze myMaze = new DrawMaze(20, 20);
-        DrawMaze myMaze1 = new DrawMaze(100, 25);
+        DrawMaze myMaze = new DrawMaze(50, 40);
+        DrawMaze myMaze1 = new DrawMaze(50, 40);
 
-        //myMaze.addHorizontalWall(2, 1, 2);
-        //myMaze.addVerticalWall(3, 1, 2);
-        //myMaze.addVerticalWall(4, 1, 3);
-        //myMaze.addHorizontalWall(0, 2, 2);
-        //myMaze.addVerticalWall(1, 0);
-        //myMaze.addHorizontalWall(1, 3, 2);
         myMaze.maze1();
         myMaze1.maze2();
     }
@@ -316,24 +309,23 @@ public class DrawMaze extends JPanel {
         display();
     }
 
-    public void maze2() {
+    public void maze2() throws NullPointerException {
         // instance variables
         ArrayList<Cell> grid = new ArrayList<>();
 
         // generate a wall filled maze
         for(int i = 0; i < width; i++) {
             for(int j = 0; j < height; j++) {
-                if(!(i == 0)) {
-                    addHorizontalWall(i, j);
-                }
 
-                addVerticalWall(i,j);
+                addVerticalWall(i, j);
+                addHorizontalWall(i,j);
+
                 grid.add(new Cell(i, j));
             }
         }
 
         // Remove the wall on the opening
-        //walls.remove(new Wall(0,0, true));
+        walls.remove(new Wall(0,0, true));
 
         // Create the stack and temporary cell
         Stack<Cell> stack = new Stack<>();
@@ -344,7 +336,7 @@ public class DrawMaze extends JPanel {
 
         // Start the recursive? loop
         do {
-            int direction = 0;
+            int direction;
 
             // If the current cell has moves available, gets the moves available
             // and randomly chooses a direction
@@ -352,6 +344,7 @@ public class DrawMaze extends JPanel {
                 Random rand = new Random();
                 ArrayList<Integer> availableMoves = current.getAvailableDirections();
                 direction = availableMoves.get(rand.nextInt(availableMoves.size()));
+                //direction = availableMoves.get(0);
 
                 if(direction == 1) {
                     int gridX = current.getX();
@@ -363,8 +356,8 @@ public class DrawMaze extends JPanel {
                             break;
                         }
                     }
-                    if(!(check.isVisited())) {
-                        current.setVisited(true);
+                    if(check.isVisited()) {
+                        current.setVisited();
                         current.availableDirections.remove(current.availableDirections.indexOf(1));
                         stack.add(current);
                         walls.remove(new Wall(current.getX(), current.getY(), true));
@@ -382,8 +375,8 @@ public class DrawMaze extends JPanel {
                             break;
                         }
                     }
-                    if(!(check.isVisited())) {
-                        current.setVisited(true);
+                    if(check.isVisited()) {
+                        current.setVisited();
                         current.availableDirections.remove(current.availableDirections.indexOf(2));
                         stack.add(current);
                         walls.remove(new Wall(current.getX(), current.getY() + 1, true));
@@ -401,8 +394,8 @@ public class DrawMaze extends JPanel {
                             break;
                         }
                     }
-                    if(!(check.isVisited())) {
-                        current.setVisited(true);
+                    if(check.isVisited()) {
+                        current.setVisited();
                         current.availableDirections.remove(current.availableDirections.indexOf(3));
                         stack.add(current);
                         walls.remove(new Wall(current.getX(), current.getY(), false));
@@ -420,8 +413,8 @@ public class DrawMaze extends JPanel {
                             break;
                         }
                     }
-                    if(!(check.isVisited())) {
-                        current.setVisited(true);
+                    if(check.isVisited()) {
+                        current.setVisited();
                         current.availableDirections.remove(current.availableDirections.indexOf(4));
                         stack.add(current);
                         walls.remove(new Wall(current.getX() + 1, current.getY(), false));
@@ -432,6 +425,7 @@ public class DrawMaze extends JPanel {
                 }
 
             } else {
+                current.setVisited();
                 current = stack.pop();
             }
         } while(!stack.isEmpty());
@@ -446,13 +440,13 @@ public class DrawMaze extends JPanel {
         int y;
         ArrayList<Integer> availableDirections = new ArrayList<>();
 
-        public Cell(int x, int y) {
+        Cell(int x, int y) {
             this.x = x;
             this.y = y;
         }
 
         public boolean isVisited() {
-            return visited;
+            return !visited;
         }
 
         public int getX() {
@@ -463,8 +457,8 @@ public class DrawMaze extends JPanel {
             return y;
         }
 
-        public void setVisited(boolean visited) {
-            this.visited = visited;
+        public void setVisited() {
+            this.visited = true;
         }
 
         public boolean hasAvailableMoves() {
